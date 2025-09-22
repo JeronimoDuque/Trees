@@ -2,6 +2,7 @@ class Node:
     def __init__(self, data):
         self.data_value = data
         self.children_value = {}
+        self.is_end = False
 
     @property
     def children(self):

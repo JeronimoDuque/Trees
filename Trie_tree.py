@@ -1,7 +1,5 @@
 from Node import Node
 
-import networkx as nx
-import matplotlib.pyplot as plt
 
 class Trie_tree:
     def __init__(self):
@@ -16,44 +14,36 @@ class Trie_tree:
                 new_node = Node(char)
                 current_node.children[char] = new_node
             current_node = current_node.children[char]
+        current_node.is_end = True
     
-    def __str__(self):
-        def traverse(node, prefix, depth):
-            result = "  " * depth + repr(node.data) + "\n"
-            for child in node.children.values():
-                result += traverse(child, prefix + child.data, depth + 1)
-            return result
-        return traverse(self.root, "", 0)
 
+    def delete(self, word):
+        def _delete(node, word, depth):
+            if depth == len(word):
+                # Fin de la palabra
+                if not node.is_end:
+                    return False  # La palabra no existe
+                node.is_end = False
+                return len(node.children) == 0  # Si no tiene hijos, se puede borrar
+            char = word[depth]
+            child = node.children.get(char)
+            if child is None:
+                return False  # La palabra no existe
+            should_delete_child = _delete(child, word, depth + 1)
+            if should_delete_child:
+                del node.children[char]
+                return len(node.children) == 0 and not getattr(node, 'is_end', False)
+            return False
 
-    def visualize(self):
-        G = nx.DiGraph()
-        levels = {}
+        # Marca el final de palabra en Node si no existe
+        if not hasattr(self.root, 'is_end'):
+            def mark_end(node):
+                node.is_end = False
+                for child in node.children.values():
+                    mark_end(child)
+            mark_end(self.root)
 
-        def add_edges(node, parent_id, level, x_pos):
-            node_id = id(node)
-            G.add_node(node_id, label=node.data)
-            levels.setdefault(level, []).append(node_id)
-            if parent_id is not None:
-                G.add_edge(parent_id, node_id)
-            for i, child in enumerate(node.children.values()):
-                add_edges(child, node_id, level + 1, i)
-
-        add_edges(self.root, None, 0, 0)
-
-        # Calcular posiciones por nivel
-        pos = {}
-        for level, nodes in levels.items():
-            n = len(nodes)
-            for i, node_id in enumerate(nodes):
-                pos[node_id] = (i - n / 2, -level)  # x: horizontal, y: nivel negativo
-
-        labels = nx.get_node_attributes(G, 'label')
-        plt.figure(figsize=(10, 6))
-        nx.draw(G, pos, labels=labels, node_color='lightblue', arrows=True, with_labels=True)
-        plt.title("Trie Visualization por niveles")
-        plt.show()
-
+        _delete(self.root, word, 0)
 
 tree = Trie_tree()
 tree.insert("hello")
