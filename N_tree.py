@@ -1,4 +1,6 @@
 from Node import Node
+import networkx as nx
+import matplotlib.pyplot as plt
 
 class N_tree:
     def __init__(self):
@@ -55,3 +57,28 @@ class N_tree:
             result.append(node.value)
             queue.extend(node.children)
         return result
+    
+    def visualize(self):
+        def add_nodes_edges(node, G, parent_id=None):
+            if node is None:
+                return
+            node_id = str(id(node))
+            label = str(node.value)
+            G.add_node(node_id, label=label)
+            if parent_id:
+                G.add_edge(parent_id, node_id)
+            for child in node.children:
+                add_nodes_edges(child, G, node_id)
+
+        G = nx.DiGraph()
+        if self.root:
+            add_nodes_edges(self.root, G)
+
+        pos = nx.spring_layout(G)  # Layout automático
+        labels = nx.get_node_attributes(G, 'label')
+
+        plt.figure(figsize=(10, 6))
+        nx.draw(G, pos, with_labels=True, labels=labels,
+                node_size=2000, node_color='lightgreen', font_size=10)
+        plt.title("Visualización del Árbol N-ario")
+        plt.show()
